@@ -5,7 +5,7 @@ local piggyCharacters = {
     "Piggy", "Little Brother", "Mother", "Father", "Grandmother", "Sheepy", "Pandy", "Teacher", "Memory",
     "Kitty", "Mimi", "Dinopiggy", "Daisy", "Angel", "Pony", "Devil", "Doggy", "Giraffy", "Beary",
     "Foxy", "Elly", "Soldier", "Zompiggy", "Badgy", "Bunny", "Skelly", "Clowny", "Tigry", "Mousy",
-    "Parasee", "Zizzy", "Ghosty", "Robby", "Bully", "Budgey", "Torcher", "Mr. P"
+    "Parasee", "Zizzy", "Ghosty", "Robby", "Billy", "Budgey", "Torcher", "Mr. P"
 }
 
 -- Helper function for rainbow color
