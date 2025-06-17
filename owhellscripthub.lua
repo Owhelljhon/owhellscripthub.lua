@@ -1,93 +1,71 @@
--- OwhellScript Hub GUI by Owhelljhon
+-- Owhell Slap Troller GUI (Fake 100M Slaps + Orbit Badge Troll)
+local StarterGui = game:GetService("StarterGui")
 
--- Character list
-local piggyCharacters = {
-    "Piggy", "Little Brother", "Mother", "Father", "Grandmother", "Sheepy", "Pandy", "Teacher", "Memory",
-    "Kitty", "Mimi", "Dinopiggy", "Daisy", "Angel", "Pony", "Devil", "Doggy", "Giraffy", "Beary",
-    "Foxy", "Elly", "Soldier", "Zompiggy", "Badgy", "Bunny", "Skelly", "Clowny", "Tigry", "Mousy",
-    "Parasee", "Zizzy", "Ghosty", "Robby", "Billy", "Budgey", "Torcher", "Mr. P"
-}
-
--- Helper function for rainbow color
-local function rainbow()
-    return Color3.fromHSV(tick() % 5 / 5, 1, 1)
+-- Rainbow Color Cycle
+local function rainbowText(textLabel)
+    local hue = 0
+    task.spawn(function()
+        while textLabel and textLabel.Parent do
+            hue = (hue + 0.01) % 1
+            textLabel.TextColor3 = Color3.fromHSV(hue, 1, 1)
+            task.wait(0.05)
+        end
+    end)
 end
 
--- GUI setup
-local player = game.Players.LocalPlayer
-local gui = Instance.new("ScreenGui", player:WaitForChild("PlayerGui"))
-gui.Name = "OwhellScriptHub"
-local main = Instance.new("Frame", gui)
-main.Size = UDim2.new(0, 300, 0, 200)
-main.Position = UDim2.new(0.5, -150, 0.5, -100)
-main.BackgroundColor3 = Color3.fromRGB(35, 35, 35)
-main.Active = true
-main.Draggable = true
+-- GUI Setup
+local gui = Instance.new("ScreenGui", game.CoreGui)
+gui.Name = "OwhellSlapGui"
+local frame = Instance.new("Frame", gui)
+frame.Size = UDim2.new(0, 300, 0, 160)
+frame.Position = UDim2.new(0.5, -150, 0.5, -80)
+frame.BackgroundColor3 = Color3.fromRGB(25, 25, 25)
+frame.Active = true
+frame.Draggable = true
 
 -- Title
-local title = Instance.new("TextLabel", main)
-title.Size = UDim2.new(1, 0, 0, 40)
-title.BackgroundTransparency = 1
-title.Text = "🌈 OwhellScript Hub 🌈"
+local title = Instance.new("TextLabel", frame)
+title.Size = UDim2.new(1, 0, 0, 30)
+title.Position = UDim2.new(0, 0, 0, 0)
+title.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
+title.Text = "🌈 Owhell Glove Troller 🌈"
 title.TextScaled = true
-title.TextColor3 = Color3.new(1, 1, 1)
-task.spawn(function()
-    while true do
-        title.TextColor3 = rainbow()
-        wait(0.1)
-    end
+title.Font = Enum.Font.GothamBold
+rainbowText(title)
+
+-- Exit Button
+local exit = Instance.new("TextButton", frame)
+exit.Size = UDim2.new(0, 30, 0, 30)
+exit.Position = UDim2.new(1, -30, 0, 0)
+exit.BackgroundColor3 = Color3.fromRGB(200, 50, 50)
+exit.Text = "X"
+exit.TextScaled = true
+exit.Font = Enum.Font.SourceSansBold
+exit.MouseButton1Click:Connect(function()
+    gui:Destroy()
 end)
 
--- Minimize/Exit
-local close = Instance.new("TextButton", main)
-close.Size = UDim2.new(0, 40, 0, 40)
-close.Position = UDim2.new(1, -45, 0, 0)
-close.Text = "X"
-close.MouseButton1Click:Connect(function() gui:Destroy() end)
+-- Fake Slap Button
+local button = Instance.new("TextButton", frame)
+button.Size = UDim2.new(0.8, 0, 0.4, 0)
+button.Position = UDim2.new(0.1, 0, 0.5, 0)
+button.BackgroundColor3 = Color3.fromRGB(50, 150, 255)
+button.Text = "Give 100M Slaps (Troll)"
+button.TextScaled = true
+button.Font = Enum.Font.GothamBold
+button.TextColor3 = Color3.new(1, 1, 1)
 
-local minimize = Instance.new("TextButton", main)
-minimize.Size = UDim2.new(0, 40, 0, 40)
-minimize.Position = UDim2.new(1, -90, 0, 0)
-minimize.Text = "_"
-minimize.MouseButton1Click:Connect(function()
-    main.Visible = false
-    scriptBox.Visible = true
-end)
-
--- Script reopen box
-local scriptBox = Instance.new("TextButton", gui)
-scriptBox.Size = UDim2.new(0, 100, 0, 40)
-scriptBox.Position = UDim2.new(0.5, -50, 0, 10)
-scriptBox.Text = "Script"
-scriptBox.Visible = false
-scriptBox.MouseButton1Click:Connect(function()
-    main.Visible = true
-    scriptBox.Visible = false
-end)
-
--- Input
-local nameBox = Instance.new("TextBox", main)
-nameBox.Size = UDim2.new(0.8, 0, 0, 30)
-nameBox.Position = UDim2.new(0.1, 0, 0.3, 0)
-nameBox.PlaceholderText = "Enter Piggy Name or type 'tokens'"
-
--- Button
-local spawnButton = Instance.new("TextButton", main)
-spawnButton.Size = UDim2.new(0.6, 0, 0, 40)
-spawnButton.Position = UDim2.new(0.2, 0, 0.55, 0)
-spawnButton.Text = "Give Item"
-spawnButton.MouseButton1Click:Connect(function()
-    local text = nameBox.Text
-    if text:lower() == "tokens" then
-        local tokenRemote = game:GetService("ReplicatedStorage"):FindFirstChild("GivePiggyTokens")
-        if tokenRemote then tokenRemote:FireServer(100) end
-    else
-        for _, char in pairs(piggyCharacters) do
-            if string.lower(text) == string.lower(char) then
-                local remote = game:GetService("ReplicatedStorage"):FindFirstChild("SpawnPiggy")
-                if remote then remote:FireServer(char) end
-                break
-            end
-        end
+button.MouseButton1Click:Connect(function()
+    StarterGui:SetCore("ChatMakeSystemMessage", {
+        Text = "[SYSTEM] You gave yourself 100,000,000 slaps! (Troll 😂)",
+        Color = Color3.fromRGB(255, 255, 0),
+        Font = Enum.Font.SourceSansBold,
+        FontSize = Enum.FontSize.Size24
+    })
+    local remote = game:GetService("ReplicatedStorage"):FindFirstChild("OrbitBadge")
+    if remote then
+        pcall(function()
+            remote:FireServer()
+        end)
     end
 end)
