@@ -1,7 +1,7 @@
 -- Fake 1000X Luck GUI by Owhelljhon
 local player = game.Players.LocalPlayer
 local gui = Instance.new("ScreenGui", player:WaitForChild("PlayerGui"))
-gui.Name = "FakeLuckGUI"
+gui.Name = "GiveLuckGUI"
 gui.ResetOnSpawn = false
 
 -- Draggable Frame
