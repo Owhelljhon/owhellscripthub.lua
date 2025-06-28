@@ -1,102 +1,74 @@
--- Owhelljhon Fake Fruit Spawner GUI 🌈
-
-local fruits = {"Kitsune", "Dragon", "Light", "Dough"}
+-- Fake 1000X Luck GUI by Owhelljhon
 local player = game.Players.LocalPlayer
+local gui = Instance.new("ScreenGui", player:WaitForChild("PlayerGui"))
+gui.Name = "FakeLuckGUI"
+gui.ResetOnSpawn = false
 
--- Rainbow function
-local function rainbowify(textLabel)
-	local h = 0
-	coroutine.wrap(function()
-		while true do
-			h = (h + 1) % 255
-			textLabel.TextColor3 = Color3.fromHSV(h/255, 1, 1)
-			wait(0.03)
-		end
-	end)()
-end
-
--- Main GUI
-local gui = Instance.new("ScreenGui", game.CoreGui)
+-- Draggable Frame
 local frame = Instance.new("Frame", gui)
-frame.Size = UDim2.new(0, 300, 0, 250)
-frame.Position = UDim2.new(0.5, -150, 0.5, -125)
-frame.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
+frame.Size = UDim2.new(0, 300, 0, 150)
+frame.Position = UDim2.new(0.3, 0, 0.3, 0)
+frame.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
+frame.BorderSizePixel = 0
 frame.Active = true
 frame.Draggable = true
 
-local title = Instance.new("TextLabel", frame)
-title.Size = UDim2.new(1, 0, 0, 40)
-title.Text = "Owhelljhon Fruit Spawner 🌈"
-title.BackgroundTransparency = 1
-title.Font = Enum.Font.GothamBold
-title.TextScaled = true
-rainbowify(title)
-
-local input = Instance.new("TextBox", frame)
-input.Size = UDim2.new(0.8, 0, 0, 40)
-input.Position = UDim2.new(0.1, 0, 0, 50)
-input.PlaceholderText = "Type: Kitsune, Dragon, Light, Dough"
-input.TextScaled = true
-
-local spawnBtn = Instance.new("TextButton", frame)
-spawnBtn.Size = UDim2.new(0.4, 0, 0, 40)
-spawnBtn.Position = UDim2.new(0.3, 0, 0, 100)
-spawnBtn.Text = "Spawn Fruit"
-spawnBtn.BackgroundColor3 = Color3.fromRGB(60, 180, 75)
-spawnBtn.TextScaled = true
-
--- Fake Inventory
-local fruitInv = {}
-
--- Fruit GUI
-local function openFruitGUI(fruitName)
-	local popup = Instance.new("Frame", gui)
-	popup.Size = UDim2.new(0, 220, 0, 180)
-	popup.Position = UDim2.new(0.5, -110, 0.5, -90)
-	popup.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
-	popup.Active = true
-	popup.Draggable = true
-
-	local lbl = Instance.new("TextLabel", popup)
-	lbl.Size = UDim2.new(1, 0, 0, 40)
-	lbl.Text = "You got a " .. fruitName .. " 🍉"
-	lbl.BackgroundTransparency = 1
-	lbl.TextScaled = true
-
-	local function makeButton(text, yPos)
-		local btn = Instance.new("TextButton", popup)
-		btn.Size = UDim2.new(0.8, 0, 0, 30)
-		btn.Position = UDim2.new(0.1, 0, yPos, 0)
-		btn.Text = text
-		btn.BackgroundColor3 = Color3.fromRGB(80, 80, 255)
-		btn.TextScaled = true
-		btn.MouseButton1Click:Connect(function()
-			if text == "Eat" then
-				lbl.Text = "You ate the " .. fruitName
-			elseif text == "Store" then
-				lbl.Text = fruitName .. " stored!"
-			elseif text == "Drop" then
-				lbl.Text = "You dropped the " .. fruitName
-			elseif text == "Nevermind" then
-				popup:Destroy()
-			end
-		end)
+-- Rainbow Text Function
+local function rainbowText(label)
+	local hue = 0
+	while true do
+		hue = (hue + 1) % 360
+		label.TextColor3 = Color3.fromHSV(hue/360, 1, 1)
+		wait(0.03)
 	end
-
-	makeButton("Eat", 0.3)
-	makeButton("Store", 0.5)
-	makeButton("Drop", 0.7)
-	makeButton("Nevermind", 0.9)
 end
 
--- Spawn logic
-spawnBtn.MouseButton1Click:Connect(function()
-	local name = input.Text:lower()
-	for _, v in pairs(fruits) do
-		if v:lower() == name then
-			table.insert(fruitInv, v)
-			openFruitGUI(v)
-			break
-		end
-	end
+-- Rainbow Name
+local title = Instance.new("TextLabel", frame)
+title.Size = UDim2.new(1, 0, 0, 40)
+title.Position = UDim2.new(0, 0, 0, 0)
+title.BackgroundTransparency = 1
+title.Text = "🌈 Owhelljhon's GUI 🌈"
+title.Font = Enum.Font.GothamBold
+title.TextSize = 20
+title.TextColor3 = Color3.new(1, 0, 0)
+spawn(function() rainbowText(title) end)
+
+-- Luck Label
+local luckLabel = Instance.new("TextLabel", frame)
+luckLabel.Size = UDim2.new(1, 0, 0, 30)
+luckLabel.Position = UDim2.new(0, 0, 0.35, 0)
+luckLabel.BackgroundTransparency = 1
+luckLabel.Text = "💯 1000X Luck"
+luckLabel.Font = Enum.Font.Gotham
+luckLabel.TextSize = 18
+luckLabel.TextColor3 = Color3.fromRGB(0, 255, 0)
+
+-- On Button
+local onBtn = Instance.new("TextButton", frame)
+onBtn.Size = UDim2.new(0, 120, 0, 30)
+onBtn.Position = UDim2.new(0.1, 0, 0.7, 0)
+onBtn.Text = "ON 🔥"
+onBtn.Font = Enum.Font.GothamBold
+onBtn.TextSize = 18
+onBtn.BackgroundColor3 = Color3.fromRGB(0, 200, 0)
+onBtn.TextColor3 = Color3.new(1,1,1)
+
+-- Off Button
+local offBtn = Instance.new("TextButton", frame)
+offBtn.Size = UDim2.new(0, 120, 0, 30)
+offBtn.Position = UDim2.new(0.55, 0, 0.7, 0)
+offBtn.Text = "OFF ❌"
+offBtn.Font = Enum.Font.GothamBold
+offBtn.TextSize = 18
+offBtn.BackgroundColor3 = Color3.fromRGB(200, 0, 0)
+offBtn.TextColor3 = Color3.new(1,1,1)
+
+-- Button Binds (They do nothing! Just for troll!)
+onBtn.MouseButton1Click:Connect(function()
+	luckLabel.Text = "💯 1000X Luck - ENABLED ✅"
+end)
+
+offBtn.MouseButton1Click:Connect(function()
+	luckLabel.Text = "💯 1000X Luck - DISABLED ❌"
 end)
