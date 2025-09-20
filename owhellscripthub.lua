@@ -1,168 +1,329 @@
--- Steal a Brainrot GUI by Owhelljhon (OwhellHubz)
--- Features: ESP, FPS Killer (Smart Ultra Mode), Anti-Lag, Reset Button
--- Blue when OFF, Green when ON | Draggable GUI
+-- Don't Wake The Brainrot — Speed GUI (Executor-ready)
+-- Author: assistant (for Owhelljhon)
+-- Paste into your executor as a single script.
 
-local players = game:GetService("Players")
-local localPlayer = players.LocalPlayer
-local runService = game:GetService("RunService")
+local TOP_NAME = "Owhelljhon"       -- change if you want a different name
+local DEFAULT_WALKSPEED = 16        -- normal Roblox walk speed
+local MAX_SPEED = 100
 
--- GUI Setup
-local ScreenGui = Instance.new("ScreenGui")
-local Frame = Instance.new("Frame")
-local Title = Instance.new("TextLabel")
-local ESPButton = Instance.new("TextButton")
-local FPSButton = Instance.new("TextButton")
-local AntiLagButton = Instance.new("TextButton")
-local ResetButton = Instance.new("TextButton")
-local UICorner = Instance.new("UICorner")
+-- Services
+local Players = game:GetService("Players")
+local RunService = game:GetService("RunService")
+local LocalPlayer = Players.LocalPlayer
+local PlayerGui = (LocalPlayer and LocalPlayer:FindFirstChild("PlayerGui")) or nil
 
-ScreenGui.Parent = game.CoreGui
+-- Try CoreGui if PlayerGui is nil (some executors / contexts)
+local guiParent = PlayerGui or game:GetService("CoreGui")
 
-Frame.Parent = ScreenGui
-Frame.BackgroundColor3 = Color3.fromRGB(0, 85, 170)
-Frame.Size = UDim2.new(0, 220, 0, 220)
-Frame.Position = UDim2.new(0.3, 0, 0.3, 0)
-Frame.Active = true
-Frame.Draggable = true
-UICorner.Parent = Frame
-
--- Title
-Title.Parent = Frame
-Title.Text = "OwhellHubz"
-Title.Size = UDim2.new(1, 0, 0, 30)
-Title.BackgroundColor3 = Color3.fromRGB(0, 70, 140)
-Title.TextColor3 = Color3.fromRGB(255, 255, 255)
-Title.Font = Enum.Font.SourceSansBold
-Title.TextScaled = true
-
--- ESP Button
-ESPButton.Parent = Frame
-ESPButton.Text = "ESP: OFF"
-ESPButton.Size = UDim2.new(0, 200, 0, 40)
-ESPButton.Position = UDim2.new(0, 10, 0, 40)
-ESPButton.BackgroundColor3 = Color3.fromRGB(0, 85, 170)
-ESPButton.TextColor3 = Color3.fromRGB(255, 255, 255)
-ESPButton.Font = Enum.Font.SourceSansBold
-ESPButton.TextScaled = true
-
--- FPS Killer Button
-FPSButton.Parent = Frame
-FPSButton.Text = "FPS Killer: OFF"
-FPSButton.Size = UDim2.new(0, 200, 0, 40)
-FPSButton.Position = UDim2.new(0, 10, 0, 90)
-FPSButton.BackgroundColor3 = Color3.fromRGB(0, 85, 170)
-FPSButton.TextColor3 = Color3.fromRGB(255, 255, 255)
-FPSButton.Font = Enum.Font.SourceSansBold
-FPSButton.TextScaled = true
-
--- Anti-Lag Button
-AntiLagButton.Parent = Frame
-AntiLagButton.Text = "Anti-Lag: OFF"
-AntiLagButton.Size = UDim2.new(0, 200, 0, 40)
-AntiLagButton.Position = UDim2.new(0, 10, 0, 140)
-AntiLagButton.BackgroundColor3 = Color3.fromRGB(0, 85, 170)
-AntiLagButton.TextColor3 = Color3.fromRGB(255, 255, 255)
-AntiLagButton.Font = Enum.Font.SourceSansBold
-AntiLagButton.TextScaled = true
-
--- Reset Button
-ResetButton.Parent = Frame
-ResetButton.Text = "RESET GUI"
-ResetButton.Size = UDim2.new(0, 200, 0, 40)
-ResetButton.Position = UDim2.new(0, 10, 0, 190)
-ResetButton.BackgroundColor3 = Color3.fromRGB(150, 0, 0)
-ResetButton.TextColor3 = Color3.fromRGB(255, 255, 255)
-ResetButton.Font = Enum.Font.SourceSansBold
-ResetButton.TextScaled = true
-
--- Variables
-local espEnabled = false
-local fpsKill = false
-local antiLag = false
-
--- ESP Function
-local function addESP(player)
-    if espEnabled and player.Character and not player.Character:FindFirstChild("OwhellESP") then
-        local highlight = Instance.new("Highlight")
-        highlight.Name = "OwhellESP"
-        highlight.FillColor = Color3.fromRGB(0, 255, 0)
-        highlight.OutlineColor = Color3.fromRGB(255, 255, 255)
-        highlight.Parent = player.Character
-    end
+-- simple helper
+local function new(name, props)
+	local obj = Instance.new(name)
+	if props then
+		for k,v in pairs(props) do obj[k] = v end
+	end
+	return obj
 end
 
-ESPButton.MouseButton1Click:Connect(function()
-    espEnabled = not espEnabled
-    if espEnabled then
-        ESPButton.Text = "ESP: ON"
-        ESPButton.BackgroundColor3 = Color3.fromRGB(0, 200, 0)
-        for _, player in pairs(players:GetPlayers()) do
-            if player ~= localPlayer then
-                addESP(player)
-            end
-        end
-    else
-        ESPButton.Text = "ESP: OFF"
-        ESPButton.BackgroundColor3 = Color3.fromRGB(0, 85, 170)
-        for _, player in pairs(players:GetPlayers()) do
-            if player.Character and player.Character:FindFirstChild("OwhellESP") then
-                player.Character.OwhellESP:Destroy()
-            end
-        end
-    end
+-- Create GUI
+local screenGui = new("ScreenGui", {Name = "OwhellSpeedGui", ResetOnSpawn = false, Parent = guiParent})
+local mainFrame = new("Frame", {
+	Name = "MainFrame",
+	Size = UDim2.new(0, 320, 0, 180),
+	Position = UDim2.new(0.5, -160, 0.3, -90),
+	AnchorPoint = Vector2.new(0.5,0.5),
+	BackgroundColor3 = Color3.fromRGB(20,20,20),
+	BorderSizePixel = 0,
+	Parent = screenGui
+})
+mainFrame.Visible = true
+mainFrame.Active = true
+mainFrame.Draggable = false -- we'll implement custom drag
+
+-- rounded look (UIStroke + Corner)
+local corner = new("UICorner", {CornerRadius = UDim.new(0,10), Parent = mainFrame})
+local stroke = new("UIStroke", {Thickness = 1, Parent = mainFrame})
+
+-- Top bar with name (rainbow text)
+local topBar = new("Frame", {
+	Name = "TopBar",
+	Size = UDim2.new(1,0,0,40),
+	Position = UDim2.new(0,0,0,0),
+	BackgroundColor3 = Color3.fromRGB(30,30,30),
+	BorderSizePixel = 0,
+	Parent = mainFrame
+})
+new("UICorner", {CornerRadius = UDim.new(0,8), Parent = topBar})
+
+local nameLabel = new("TextLabel", {
+	Name = "NameLabel",
+	Size = UDim2.new(1,0,1,0),
+	BackgroundTransparency = 1,
+	Font = Enum.Font.GothamBold,
+	TextSize = 20,
+	Text = TOP_NAME,
+	TextStrokeTransparency = 0.8,
+	Parent = topBar
+})
+nameLabel.TextColor3 = Color3.fromRGB(255,0,0)
+
+-- Speed label + textbox
+local labelSpeed = new("TextLabel", {
+	Name = "LabelSpeed",
+	Size = UDim2.new(0.5, -10, 0, 28),
+	Position = UDim2.new(0,10,0,50),
+	BackgroundTransparency = 1,
+	Font = Enum.Font.GothamMedium,
+	TextSize = 14,
+	Text = "Speed (0-"..tostring(MAX_SPEED)..")",
+	TextColor3 = Color3.fromRGB(220,220,220),
+	Parent = mainFrame
+})
+
+local speedBox = new("TextBox", {
+	Name = "SpeedBox",
+	Size = UDim2.new(0.45, -10, 0, 28),
+	Position = UDim2.new(0.5, 0, 0, 50),
+	PlaceholderText = "Type number",
+	ClearTextOnFocus = false,
+	Font = Enum.Font.Gotham,
+	TextSize = 16,
+	Text = tostring(DEFAULT_WALKSPEED),
+	BackgroundColor3 = Color3.fromRGB(40,40,40),
+	BorderSizePixel = 0,
+	TextColor3 = Color3.fromRGB(255,255,255),
+	Parent = mainFrame
+})
+new("UICorner", {CornerRadius = UDim.new(0,6), Parent = speedBox})
+
+-- Speed toggle button
+local speedBtn = new("TextButton", {
+	Name = "SpeedButton",
+	Size = UDim2.new(0.46, 0, 0, 32),
+	Position = UDim2.new(0.02, 0, 0, 90),
+	Font = Enum.Font.GothamBold,
+	TextSize = 16,
+	Text = "Speed: Off",
+	BackgroundColor3 = Color3.fromRGB(60,60,60),
+	BorderSizePixel = 0,
+	TextColor3 = Color3.fromRGB(255,255,255),
+	Parent = mainFrame
+})
+new("UICorner", {CornerRadius = UDim.new(0,6), Parent = speedBtn})
+
+-- Speed Bypass toggle
+local bypassBtn = new("TextButton", {
+	Name = "BypassButton",
+	Size = UDim2.new(0.46, 0, 0, 32),
+	Position = UDim2.new(0.52, 0, 0, 90),
+	Font = Enum.Font.GothamBold,
+	TextSize = 16,
+	Text = "Speed Bypass: Off",
+	BackgroundColor3 = Color3.fromRGB(60,60,60),
+	BorderSizePixel = 0,
+	TextColor3 = Color3.fromRGB(255,255,255),
+	Parent = mainFrame
+})
+new("UICorner", {CornerRadius = UDim.new(0,6), Parent = bypassBtn})
+
+-- small instructions
+local hint = new("TextLabel", {
+	Name = "Hint",
+	Size = UDim2.new(1, -20, 0, 36),
+	Position = UDim2.new(0,10,1,-46),
+	BackgroundTransparency = 1,
+	Font = Enum.Font.Gotham,
+	TextSize = 12,
+	Text = "Type a number then press Speed. If teleport-back occurs, enable Speed Bypass.",
+	TextColor3 = Color3.fromRGB(180,180,180),
+	TextWrapped = true,
+	Parent = mainFrame
+})
+
+-- drag logic (custom)
+do
+	local dragging, dragInput, dragStart, startPos
+	local function update(input)
+		local delta = input.Position - dragStart
+		mainFrame.Position = UDim2.new(startPos.X.Scale, startPos.X.Offset + delta.X, startPos.Y.Scale, startPos.Y.Offset + delta.Y)
+	end
+	mainFrame.InputBegan:Connect(function(input)
+		if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+			dragging = true
+			dragStart = input.Position
+			startPos = mainFrame.Position
+			input.Changed:Connect(function()
+				if input.UserInputState == Enum.UserInputState.End then
+					dragging = false
+				end
+			end)
+		end
+	end)
+	mainFrame.InputChanged:Connect(function(input)
+		if input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch then
+			dragInput = input
+		end
+	end)
+	game:GetService("UserInputService").InputChanged:Connect(function(input)
+		if input == dragInput and dragging then
+			update(input)
+		end
+	end)
+end
+
+-- rainbow effect for name label
+local hue = 0
+local nameConn
+nameConn = RunService.RenderStepped:Connect(function(dt)
+	hue = (hue + dt * 0.18) % 1 -- speed of rainbow cycle
+	nameLabel.TextColor3 = Color3.fromHSV(hue, 0.9, 1)
 end)
 
-players.PlayerAdded:Connect(function(player)
-    player.CharacterAdded:Connect(function()
-        if espEnabled then
-            task.wait(1)
-            addESP(player)
-        end
-    end)
+-- core speed logic
+local speedEnabled = false
+local bypassEnabled = false
+local requestedSpeed = DEFAULT_WALKSPEED
+
+local function getCharacter()
+	if not LocalPlayer then return nil end
+	return LocalPlayer.Character or LocalPlayer.CharacterAdded:Wait()
+end
+
+local function getHumanoid()
+	local char = getCharacter()
+	if not char then return nil end
+	return char:FindFirstChildOfClass("Humanoid")
+end
+
+local function getRootPart()
+	local char = getCharacter()
+	if not char then return nil end
+	return char:FindFirstChild("HumanoidRootPart")
+end
+
+-- clamp helper
+local function clampSpeed(n)
+	n = tonumber(n) or 0
+	if n < 0 then n = 0 end
+	if n > MAX_SPEED then n = MAX_SPEED end
+	return math.floor(n)
+end
+
+-- apply walk speed safely
+local function applyWalkSpeed(v)
+	local humanoid = getHumanoid()
+	if humanoid then
+		pcall(function() humanoid.WalkSpeed = v end)
+	end
+end
+
+-- Speed Button behaviour
+speedBtn.MouseButton1Click:Connect(function()
+	local val = clampSpeed(speedBox.Text)
+	requestedSpeed = val
+	speedBox.Text = tostring(requestedSpeed)
+	speedEnabled = not speedEnabled
+	if speedEnabled then
+		speedBtn.Text = "Speed: On"
+		-- apply immediately
+		applyWalkSpeed(requestedSpeed)
+	else
+		speedBtn.Text = "Speed: Off"
+		applyWalkSpeed(DEFAULT_WALKSPEED)
+	end
 end)
 
--- FPS Killer Function (Ultra Mode)
-FPSButton.MouseButton1Click:Connect(function()
-    fpsKill = not fpsKill
-    if fpsKill then
-        FPSButton.Text = "FPS Killer: ON"
-        FPSButton.BackgroundColor3 = Color3.fromRGB(0, 200, 0)
-        task.spawn(function()
-            while fpsKill do
-                local char = localPlayer.Character
-                if char and char:FindFirstChild("Stealing") then
-                    for i = 1, 10 do -- Spam 10 times per frame
-                        game.ReplicatedStorage.Remotes.SwingBat:FireServer()
-                    end
-                end
-                task.wait(0.001) -- Extremely fast
-            end
-        end)
-    else
-        FPSButton.Text = "FPS Killer: OFF"
-        FPSButton.BackgroundColor3 = Color3.fromRGB(0, 85, 170)
-    end
+-- TextBox change clamps value live
+speedBox.FocusLost:Connect(function(enterPressed)
+	local val = clampSpeed(speedBox.Text)
+	requestedSpeed = val
+	speedBox.Text = tostring(requestedSpeed)
+	if speedEnabled then
+		applyWalkSpeed(requestedSpeed)
+	end
 end)
 
--- Anti-Lag Function (Client only)
-AntiLagButton.MouseButton1Click:Connect(function()
-    antiLag = not antiLag
-    if antiLag then
-        AntiLagButton.Text = "Anti-Lag: ON"
-        AntiLagButton.BackgroundColor3 = Color3.fromRGB(0, 200, 0)
-        for _, v in pairs(workspace:GetDescendants()) do
-            if v:IsA("ParticleEmitter") or v:IsA("Trail") then
-                v.Enabled = false
-            end
-        end
-    else
-        AntiLagButton.Text = "Anti-Lag: OFF"
-        AntiLagButton.BackgroundColor3 = Color3.fromRGB(0, 85, 170)
-    end
+-- Bypass toggle
+bypassBtn.MouseButton1Click:Connect(function()
+	bypassEnabled = not bypassEnabled
+	if bypassEnabled then
+		bypassBtn.Text = "Speed Bypass: On"
+	else
+		bypassBtn.Text = "Speed Bypass: Off"
+	end
 end)
 
--- Reset GUI Button
-ResetButton.MouseButton1Click:Connect(function()
-    ScreenGui:Destroy()
-    loadstring(game:HttpGet("PASTE_YOUR_SCRIPT_LINK_HERE"))() -- You can host your script on Pastebin or GitHub
+-- Bypass implementation:
+-- While bypass is enabled, we:
+-- 1) keep setting humanoid.WalkSpeed to requestedSpeed each frame
+-- 2) nudge HumanoidRootPart.Velocity along the current move direction when moving to help prevent server-side teleport-back
+-- Note: this is a mitigation attempt and may not work against strong server anti-cheat. Use responsibly.
+local bypassConn
+bypassConn = RunService.Stepped:Connect(function(_, dt)
+	-- Always keep name color cycling
+	-- enforce speed if enabled
+	if speedEnabled then
+		applyWalkSpeed(requestedSpeed)
+	end
+
+	if bypassEnabled and speedEnabled then
+		local char = getCharacter()
+		local humanoid = char and char:FindFirstChildOfClass("Humanoid")
+		local hrp = char and char:FindFirstChild("HumanoidRootPart")
+		if humanoid and hrp then
+			-- small safe velocity nudge only when moving:
+			local moveDir = humanoid.MoveDirection
+			local speed = requestedSpeed
+			-- when the moveDirection magnitude is significant, nudge velocity a bit
+			if moveDir.Magnitude > 0.02 and speed > 0 then
+				-- convert speed to studs/sec; add small vertical preserve
+				local desiredVel = moveDir.Unit * (math.max(0.1, speed))
+				-- apply using velocity but keep Y component small (don't fly)
+				local currentVel = hrp.Velocity
+				local newVel = Vector3.new(desiredVel.X, math.clamp(currentVel.Y, -50, 50), desiredVel.Z)
+				-- pcall to avoid runtime errors on some exploits
+				pcall(function()
+					hrp.Velocity = newVel
+				end)
+			end
+			-- also reapply WalkSpeed to be persistent
+			pcall(function() humanoid.WalkSpeed = speed end)
+		end
+	end
+
+	-- when bypass is off and speed disabled we ensure default
+	if (not speedEnabled) and (not bypassEnabled) then
+		applyWalkSpeed(DEFAULT_WALKSPEED)
+	end
 end)
+
+-- Clean up on character respawn: reapply settings
+if LocalPlayer then
+	LocalPlayer.CharacterAdded:Connect(function()
+		wait(0.5)
+		if speedEnabled then applyWalkSpeed(requestedSpeed) end
+	end)
+end
+
+-- small close button (optional)
+local closeBtn = new("TextButton", {
+	Name = "CloseBtn",
+	Size = UDim2.new(0,24,0,24),
+	Position = UDim2.new(1,-28,0,6),
+	BackgroundColor3 = Color3.fromRGB(120,40,40),
+	Text = "X",
+	Font = Enum.Font.GothamBold,
+	TextSize = 14,
+	BorderSizePixel = 0,
+	Parent = mainFrame
+})
+new("UICorner", {CornerRadius = UDim.new(0,6), Parent = closeBtn})
+closeBtn.MouseButton1Click:Connect(function()
+	pcall(function()
+		nameConn:Disconnect()
+		bypassConn:Disconnect()
+	end)
+	screenGui:Destroy()
+end)
+
+-- final note printed to console
+print("[Owhell] Speed GUI loaded. Use the textbox (0-"..MAX_SPEED..") and press Speed. Enable Bypass if you get teleported back.")
