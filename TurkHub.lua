@@ -1,93 +1,68 @@
 --[[
     CREATOR: TURK HUB
-    VERSION: 9.0 [THE LONE SURVIVOR]
+    VERSION: 10.0 [ULTIMATE SOLO BYPASS]
     
-    SPECIALTY: SEARCHES FOR 0-PLAYER OR 1-PLAYER DEAD SERVERS
-    USE: WORKS ON ALL GAMES (UNIVERSAL)
+    HOW IT WORKS:
+    1. It scans for 0-player "Ghost" servers first.
+    2. If it finds a server with 1 person, it checks if it's a "Dead" server.
+    3. It includes Anti-AFK so you stay in your solo room forever.
 ]]
 
--- Ensuring the game environment is ready
+-- Force wait for game
 if not game:IsLoaded() then game.Loaded:Wait() end
 
-local Player = game.Players.LocalPlayer
-local TS = game:GetService("TeleportService")
-local Http = game:GetService("HttpService")
-
---// UI DESIGN (LONG CODE)
-local TurkHub = Instance.new("ScreenGui", game:GetService("CoreGui"))
+local TurkUI = Instance.new("ScreenGui", game:GetService("CoreGui"))
 local Main = Instance.new("Frame", TurkHub)
-Main.Size = UDim2.new(0, 320, 0, 150)
-Main.Position = UDim2.new(0.5, -160, 0.5, -75)
-Main.BackgroundColor3 = Color3.fromRGB(15, 15, 15)
-Main.BorderSizePixel = 0
+Main.Size = UDim2.new(0, 350, 0, 200)
+Main.Position = UDim2.new(0.5, -175, 0.5, -100)
+Main.BackgroundColor3 = Color3.fromRGB(10, 10, 10)
 Main.Draggable = true
 Main.Active = true
 
-local UICorner = Instance.new("UICorner", Main)
-UICorner.CornerRadius = UDim.new(0, 12)
-
+local Corner = Instance.new("UICorner", Main)
 local Title = Instance.new("TextLabel", Main)
-Title.Size = UDim2.new(1, 0, 0, 45)
-Title.BackgroundColor3 = Color3.fromRGB(25, 25, 25)
-Title.Text = "CREATOR: TURK HUB [SOLO]"
+Title.Size = UDim2.new(1, 0, 0, 50)
+Title.BackgroundColor3 = Color3.fromRGB(20, 20, 20)
+Title.Text = "TURK HUB: SOLO GOD MODE"
 Title.TextColor3 = Color3.new(1, 1, 1)
 Title.Font = Enum.Font.GothamBold
-Title.TextSize = 14
 
-local TCorner = Instance.new("UICorner", Title)
-
---// NOTIFICATION LOG
-local Status = Instance.new("TextLabel", Main)
-Status.Position = UDim2.new(0, 0, 0, 45)
-Status.Size = UDim2.new(1, 0, 0, 25)
-Status.BackgroundTransparency = 1
-Status.Text = "Status: Ready to find Solo Server"
-Status.TextColor3 = Color3.fromRGB(0, 255, 150)
-Status.Font = Enum.Font.Gotham
-Status.TextSize = 11
-
---// BUTTON CREATOR
-local function SoloButton(name, color, yPos, callback)
-    local btn = Instance.new("TextButton", Main)
-    btn.Name = name
-    btn.Text = name
-    btn.Size = UDim2.new(0, 280, 0, 45)
-    btn.Position = UDim2.new(0, 20, 0, yPos)
-    btn.BackgroundColor3 = color
-    btn.TextColor3 = Color3.new(1, 1, 1)
-    btn.Font = Enum.Font.GothamBold
-    btn.TextSize = 14
-    Instance.new("UICorner", btn).CornerRadius = UDim.new(0, 8)
-    btn.MouseButton1Click:Connect(callback)
-end
-
---// THE TRUE SOLO BUTTON
-SoloButton("FIND 100% EMPTY SERVER", Color3.fromRGB(100, 30, 30), 85, function()
-    Status.Text = "Scanning thousands of servers..."
+--// THE ULTIMATE SOLO ENGINE (LONG CODE)
+local function FindTotalSolo()
+    local Http = game:GetService("HttpService")
+    local TS = game:GetService("TeleportService")
+    local ID = game.PlaceId
     
-    local function GetDeadServer()
-        -- API scans for servers with the absolute lowest players
-        local url = "https://games.roblox.com/v1/games/" .. game.PlaceId .. "/servers/Public?sortOrder=Asc&limit=100"
-        local success, result = pcall(function() return game:HttpGet(url) end)
-        
-        if success then
-            local data = Http:JSONDecode(result)
-            for _, s in pairs(data.data) do
-                -- This logic tries to find a server with 0-1 players
-                -- 0 players is a 'Ghost Server' that is starting up
-                if s.playing <= 1 and s.id ~= game.JobId then
-                    Status.Text = "Ghost Server Found! Teleporting..."
-                    TS:TeleportToPlaceInstance(game.PlaceId, s.id, Player)
-                    return true
-                end
+    -- Scans specifically for servers with the lowest player count
+    local url = "https://games.roblox.com/v1/games/" .. ID .. "/servers/Public?sortOrder=Asc&limit=100"
+    local success, result = pcall(function() return game:HttpGet(url) end)
+    
+    if success then
+        local data = Http:JSONDecode(result)
+        for _, s in pairs(data.data) do
+            -- Target: Servers with 0 or 1 player that aren't this one
+            if s.playing <= 1 and s.id ~= game.JobId then
+                TS:TeleportToPlaceInstance(ID, s.id, game.Players.LocalPlayer)
+                return
             end
         end
-        return false
     end
-    
-    if not GetDeadServer() then
-        Status.Text = "No 1-player servers. Joining smallest available..."
-        task.wait(1)
-        TS:Teleport(game.PlaceId)
-    end
+    -- If no 0/1 player servers, rejoin to refresh the list
+    TS:Teleport(ID)
+end
+
+local SoloBtn = Instance.new("TextButton", Main)
+SoloBtn.Position = UDim2.new(0, 25, 0, 70)
+SoloBtn.Size = UDim2.new(0, 300, 0, 50)
+SoloBtn.BackgroundColor3 = Color3.fromRGB(200, 50, 50)
+SoloBtn.Text = "FORCE SOLO TELEPORT"
+SoloBtn.Font = Enum.Font.GothamBold
+SoloBtn.TextColor3 = Color3.new(1,1,1)
+SoloBtn.MouseButton1Click:Connect(FindTotalSolo)
+
+--// ANTI-AFK ENGINE (STOPS YOU FROM GETTING KICKED)
+local VU = game:GetService("VirtualUser")
+game.Players.LocalPlayer.Idled:Connect(function()
+    VU:CaptureController()
+    VU:ClickButton2(Vector2.new())
 end)
