@@ -1,85 +1,117 @@
-local Players = game:GetService("Players")
-local RunService = game:GetService("RunService")
-local TweenService = game:GetService("TweenService")
+-- [[ Turk Hub: Universal Private Server Manager ]] --
+-- Creator: Turk Hub
+-- Compatibility: Works on all games (Universal)
 
-local player = Players.LocalPlayer
-local character = player.Character or player.CharacterAdded:Wait()
-local humanoid = character:WaitForChild("Humanoid")
+local Rayfield = loadstring(game:HttpGet('https://sirius.menu/rayfield'))()
 
--- UI REFERENCES
-local screenGui = script.Parent
-local mainFrame = screenGui:WaitForChild("MainFrame")
-local speedInput = mainFrame:WaitForChild("SpeedInput")
-local instaTakeBtn = mainFrame:WaitForChild("InstaTakeButton")
+local Window = Rayfield:CreateWindow({
+   Name = "Creator: Turk Hub",
+   LoadingTitle = "Turk Hub Universal",
+   LoadingSubtitle = "by Turk",
+   ConfigurationSaving = {
+      Enabled = true,
+      FolderName = "TurkHubData",
+      FileName = "UniversalConfig"
+   },
+   Discord = {
+      Enabled = false,
+      Invite = "",
+      RememberJoins = true
+   },
+   KeySystem = false, -- Change to true if you want to add a key
+})
 
--- 1. CREATE MOBILE TOGGLE BUTTON
-local toggleButton = Instance.new("TextButton")
-toggleButton.Name = "TurkHubToggle"
-toggleButton.Parent = screenGui
-toggleButton.Size = UDim2.new(0, 60, 0, 60)
-toggleButton.Position = UDim2.new(0, 10, 0.5, -30) -- Left side of screen
-toggleButton.BackgroundColor3 = Color3.fromHex("#1A1A1A")
-toggleButton.Text = "🦃"
-toggleButton.TextSize = 30
-toggleButton.ZIndex = 10
+-- [[ MAIN TAB ]] --
+local MainTab = Window:CreateTab("Server Tools", 4483362458) 
+local Section = MainTab:CreateSection("Server Creation")
 
-local corner = Instance.new("UICorner")
-corner.CornerRadius = UDim.new(0, 12)
-corner.Parent = toggleButton
+MainTab:CreateButton({
+   Name = "Generate Private Server & Teleport",
+   Info = "This will create a new instance and copy the code to your clipboard.",
+   Callback = function()
+       local TS = game:GetService("TeleportService")
+       local Players = game:GetService("Players")
+       
+       -- Generate the Reserved Server
+       local success, code = pcall(function()
+           return TS:ReserveServer(game.PlaceId)
+       end)
 
-local stroke = Instance.new("UIStroke")
-stroke.Thickness = 2
-stroke.Color = Color3.new(0, 0, 0)
-stroke.Parent = toggleButton
+       if success then
+           setclipboard(code) -- Automatically copies for sharing
+           Rayfield:Notify({
+              Title = "Success!",
+              Content = "Code Copied to Clipboard! Teleporting now...",
+              Duration = 6.5,
+              Image = 4483362458,
+           })
+           task.wait(1.5)
+           TS:TeleportToPrivateServer(game.PlaceId, code, {Players.LocalPlayer})
+       else
+           Rayfield:Notify({
+              Title = "Error",
+              Content = "Game does not support Reserved Servers.",
+              Duration = 5,
+              Image = 4483362458,
+           })
+       end
+   end,
+})
 
--- TOGGLE LOGIC (Tapping the Turkey opens the menu)
-toggleButton.MouseButton1Click:Connect(function()
-    mainFrame.Visible = not mainFrame.Visible
-end)
+local Section = MainTab:CreateSection("Join Friend")
 
--- 2. APPLY DARK THEME
-mainFrame.BackgroundColor3 = Color3.fromHex("#121212") -- Darker
-mainFrame.Visible = false -- Start hidden
+local JoinInput = MainTab:CreateInput({
+   Name = "Enter Server Code",
+   PlaceholderText = "Paste long code here...",
+   RemoveTextAfterFocusLost = false,
+   Callback = function(Text)
+       _G.TargetServerCode = Text
+   end,
+})
 
---- 🏃 MOBILE SPEED LOGIC ---
-speedInput.FocusLost:Connect(function()
-	local val = tonumber(speedInput.Text)
-	if val then
-		local clamped = math.clamp(val, 16, 2000)
-		humanoid.WalkSpeed = clamped
-		speedInput.Text = "SPEED: " .. tostring(clamped)
-	else
-		speedInput.Text = "TAP TO SET SPEED"
-	end
-end)
+MainTab:CreateButton({
+   Name = "Join via Code",
+   Callback = function()
+       if _G.TargetServerCode and _G.TargetServerCode ~= "" then
+           game:GetService("TeleportService"):TeleportToPrivateServer(game.PlaceId, _G.TargetServerCode, {game.Players.LocalPlayer})
+       else
+           Rayfield:Notify({
+              Title = "Input Required",
+              Content = "Please paste a code into the box above!",
+              Duration = 5,
+              Image = 4483362458,
+           })
+       end
+   end,
+})
 
---- ⚡ MOBILE INSTA-TAKE ---
-local instaTakeEnabled = false
-instaTakeBtn.MouseButton1Click:Connect(function()
-	instaTakeEnabled = not instaTakeEnabled
-	
-	if instaTakeEnabled then
-		instaTakeBtn.BackgroundColor3 = Color3.fromHex("#333333")
-		instaTakeBtn.Text = "INSTA-TAKE: ON"
-		instaTakeBtn.TextColor3 = Color3.fromRGB(0, 255, 0)
-	else
-		instaTakeBtn.BackgroundColor3 = Color3.fromHex("#1A1A1A")
-		instaTakeBtn.Text = "INSTA-TAKE: OFF"
-		instaTakeBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
-	end
-end)
+-- [[ INFO TAB ]] --
+local InfoTab = Window:CreateTab("Game Info", 4483362458)
+local GameSection = InfoTab:CreateSection("Current Game Details")
 
---- 🤏 AUTO-COLLECT (Works on Mobile) ---
-RunService.Heartbeat:Connect(function()
-	if instaTakeEnabled and character:FindFirstChild("HumanoidRootPart") then
-		for _, v in pairs(workspace:GetDescendants()) do
-			if v:IsA("ProximityPrompt") then
-				local dist = (character.HumanoidRootPart.Position - v.Parent:GetPivot().Position).Magnitude
-				if dist <= v.MaxActivationDistance then
-					-- This triggers the "E" button for you
-					fireproximityprompt(v) 
-				end
-			end
-		end
-	end
-end)
+InfoTab:CreateLabel("Game ID: " .. game.GameId)
+InfoTab:CreateLabel("Place ID: " .. game.PlaceId)
+InfoTab:CreateLabel("Server JobID: " .. game.JobId)
+
+InfoTab:CreateButton({
+   Name = "Rejoin Current Server",
+   Callback = function()
+       game:GetService("TeleportService"):TeleportToPlaceInstance(game.PlaceId, game.JobId, game.Players.LocalPlayer)
+   end,
+})
+
+-- [[ MISC TAB ]] --
+local MiscTab = Window:CreateTab("Settings", 4483362458)
+MiscTab:CreateButton({
+   Name = "Destroy UI",
+   Callback = function()
+       Rayfield:Destroy()
+   end,
+})
+
+Rayfield:Notify({
+   Title = "Turk Hub Loaded",
+   Content = "Universal Script is ready for use!",
+   Duration = 5,
+   Image = 4483362458,
+})
